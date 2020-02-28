@@ -1,0 +1,98 @@
+Vagrant.configure("2") do |config|
+  config.vagrant.plugins = "vagrant-vbguest"
+
+
+### CENTOS CONFIGURATION
+
+  config.vm.define "centos1", primary: true do |centos1|
+    centos1.vm.box = "centos/7"
+    centos1.vm.provider "virtualbox" do |vb|
+      vb.gui = true
+      vb.customize ["modifyvm", :id, "--cpus", 1]
+      vb.customize ["modifyvm", :id, "--memory", 512]
+    end
+    centos1.vm.hostname = "centos1"
+    centos1.vm.network "private_network", ip: "192.168.10.11"
+    centos1.vm.synced_folder "Resources/centos1/", "/home/vagrant/Resources", mount_options: ["ro"]
+    centos1.vm.provision "shell", inline: <<-SHELL
+      sudo yum check-update -y
+      sudo yum install vim net-tools -y
+      sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      sudo systemctl restart sshd
+    SHELL
+  end
+
+  config.vm.define "centos2" do |centos2|
+    centos2.vm.box = "centos/7"
+    centos2.vm.provider "virtualbox" do |vb|
+      vb.customize ["modifyvm", :id, "--cpus", 1]
+      vb.customize ["modifyvm", :id, "--memory", 512]
+    end
+    centos2.vm.hostname = "centos2"
+    centos2.vm.network "private_network", ip: "192.168.10.12"
+    centos2.vm.synced_folder "Resources/centos2/", "/home/vagrant/Resources", mount_options: ["ro"]
+    centos2.vm.provision "shell", inline: <<-SHELL
+      sudo yum check-update -y
+      sudo yum install vim net-tools -y
+      sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      sudo systemctl restart sshd
+    SHELL
+  end
+
+### UBUNTU CONFIGURATION
+
+#  config.vm.define "ubuntu" do |ubuntu|
+#    ubuntu.vm.box = "ubuntu/xenial64"
+#    ubuntu.vm.synced_folder "Resources/ubuntu/", "/home/vagrant/Resources", mount_options: ["ro"]
+#    ubuntu.vm.provider "virtualbox" do |vb|
+#      vb.customize ["modifyvm", :id, "--cpus", 2]
+#      vb.customize ["modifyvm", :id, "--memory", 1024]
+#    end
+#    ubuntu.vm.provision "shell", inline: <<-SHELL
+#      sudo apt-get update -y
+#      sudo apt-get install libc6-i386 -y
+#    SHELL
+#  end
+
+### WINDOWS CONFIGURATION
+
+  config.vm.define "windows", autostart: false do |windows|
+    windows.vm.box = "senglin/win-10-enterprise-vs2015community"
+    windows.vm.box_version = "1.0.0"
+    windows.vm.guest = :windows
+    windows.vm.communicator = :winrm
+    windows.winrm.username = "vagrant"
+    windows.winrm.password = "vagrant"
+    windows.vm.hostname = "windows"
+    windows.vm.network "private_network", ip: "192.168.10.21"
+    windows.vm.synced_folder "Resources/windows/", "/Resources"
+    windows.vm.provider "virtualbox" do |vb|
+       vb.gui = true
+#      vb.customize ["modifyvm", :id, "--cpus", 2]
+#      vb.customize ["modifyvm", :id, "--memory", 2048]
+    end
+  end
+
+### GLOBAL CONFIGURATION
+
+#  config.vm.box_check_update = false
+  config.vm.provider "virtualbox" do |vb|
+#    vb.gui = true
+#    vb.memory = "512"
+#    vb.customize ["modifyvm", :id, "--accelerate3d", "on"]
+#    vb.customize ["modifyvm", :id, "--accelerate2dvideo", "on"]
+#    vb.customize ["modifyvm", :id, "--vram", "32"]
+#    vb.customize ["modifyvm", :id, "--graphicscontroller", "vboxsvga"]
+#    vb.customize ["modifyvm", :id, "--hwvirtex", "on"]
+    vb.customize ["modifyvm", :id, "--clipboard-mode", "bidirectional"]
+    vb.customize ["modifyvm", :id, "--draganddrop", "bidirectional"]
+  end 
+
+# Enable provisioning with a shell script. Additional provisioners such as
+  # Ansible, Chef, Docker, Puppet and Salt are also available. Please see the
+  # documentation for more information about their specific syntax and use.
+  # config.vm.provision "shell", inline: <<-SHELL
+  #   apt-get update
+  #   apt-get install -y apache2
+  # SHELL
+end
